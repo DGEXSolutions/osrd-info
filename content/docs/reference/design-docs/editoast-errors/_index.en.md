@@ -227,7 +227,9 @@ enum MyError {
 
 ### Providing `context`
 
-Only `4xx` errors require context since these are the errors the frontend may use to provide the user some form of recovery. Context is computed just before the error is serialized in `axum`'s error handler.
+Context is computed just before the error is serialized in `axum`'s error handler.
+
+Note: it shouldn't be used in `editoast` as we now have enums variants we can `match` on. The `context` response field is meant to provide data potentially useful to the frontend so that it may perform some kind of error recovery.
 
 `derive(ViewError)` provides a few ways to set it.
 
