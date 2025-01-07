@@ -86,7 +86,7 @@ pub enum ProcessingError {
     ...,
     responses(
         (status = 200, body = Computation),
-        (status = 400, body = EndpointError)
+        (status = 942, body = EndpointError) // placeholder status code, see below why
     )
 )]
 async fn endpoint(Path(key): Path<Key>) -> Result<Json<Computation>, EndpointError> {
@@ -329,9 +329,10 @@ The easier way to proceed here would be, to start by converting simple errors th
 
 A good starting place would be `editoast_search`[^1] because its internal errors do not implement `EditoastError` already. Valkey errors may also be a decent candidate.
 
-One large change that will have to be atomic will be the adaptation of `Model`'s errors.
+One large change that will have to be atomic will be the adaptation of `Model`'s errors[^3].
 
 [^1]: Provided we start this migration before the rewrite of the search engine.
+[^3]: This work has already started at the time of writing.
 
 #### Wrapping up things
 
