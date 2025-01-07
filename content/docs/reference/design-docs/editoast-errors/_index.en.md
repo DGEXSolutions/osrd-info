@@ -290,10 +290,6 @@ struct CoreError {
     metadata: HashMap<String, String>,
     /// The original error
     error: serde_json::Value,
-    /// Additional context the caller of the failed Core RPC can provide
-    ///
-    /// Note named "context" on purpose to avoid confusion with the `context` field of the standard OSRD error.
-    additional_information: HashMap<String, serde_json::Value>,
 }
 ```
 
