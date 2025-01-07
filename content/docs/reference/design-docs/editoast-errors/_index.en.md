@@ -339,7 +339,7 @@ Eventually, when all errors are converted and views errors are attached to their
 
 1. Remove `trait EditoastError`, `derive(EditoastError)` and `struct InternalError` (at least its former version as the name may be reused in a different scope)
 2. Adapt the frontend error keys collection script to look for errors in the OpenAPI routes response section instead of `components/schemas`
-5. (Out of scope) Discuss with the frontend the level of visibility about internal errors we want to give the user
+3. (Out of scope) Discuss with the frontend the level of visibility about internal errors we want to give the user
 
 ### Rejected ideas
 
