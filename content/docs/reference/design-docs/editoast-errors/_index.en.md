@@ -292,7 +292,7 @@ struct CoreError {
     /// Additional context the caller of the failed Core RPC can provide
     ///
     /// Note named "context" on purpose to avoid confusion with the `context` field of the standard OSRD error.
-    additional_information: Option<HashMap<String, serde_json::Value>>,
+    additional_information: HashMap<String, serde_json::Value>,
 }
 ```
 
