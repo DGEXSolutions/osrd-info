@@ -241,26 +241,27 @@ Note: it shouldn't be used in `editoast` as we now have enums variants we can `m
 #[derive(Debug, thiserror::Error, ViewError)]
 enum Error {
     #[view_error(user)]
-    No { because: String }, // { }
+    NoContext { because: String }, // context = { }
 
     #[view_error(user, context)]
-    Nein { reasons: Vec<String> }, // { "reasons": [string] }
+    AllFieldsIntoContext { reasons: Vec<String> }, // context = { "reasons": [string] }
 
-    // select (and maybe rename) some fields
+    // select (and maybe rename) some fields to include to the context
     #[view_error(user, context(reason, recovery_id = "recovery"))]
-    QueNo {
+    SomeFieldsIntoContext {
         reason: String,
         recovery_id: String,
-        not_serializable: mspc::Send<()>
-    },
+        not_serializable: mpsc::Sender<()>,
+        not_wanted: u64,
+    }, // context = { "reason": string, "recovery": string }
 }
 
 // with a provider function
 #[derive(Debug, thiserror::Error, ViewError)]
 #[view_error(context_with = context_provider)]
 enum Error {
-    Nao(String),
-    Nee(String, u64)
+    Variant1(String),
+    Variant2(String, u64)
 }
 
 fn context_provider(error: Error) -> HashMap<String, serde_json::Value> {
