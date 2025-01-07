@@ -117,11 +117,11 @@ Since we require no other constraint that `impl std::error::Error` for compositi
 #[error("postgres error: {0}")]
 struct DbError(#[from] diesel::Error);
 
-// in editoast_redis (if we actually had that crate 👀)
+// in editoast_valkey (if we actually had that crate 👀)
 
 #[derive(Debug, thiserror::Error)]
-#[error("redis error: {0}")]
-struct RedisError(#[from] redis::Error);
+#[error("valkey error: {0}")]
+struct ValkeyError(#[from] redis::RedisError);
 
 // in editoast_views, where diesel isn't available
 
@@ -151,7 +151,7 @@ enum UpdateError {
     Db(#[from] DbError),
 
     #[view_error(internal)]
-    Redis(#[from] RedisError),
+    Valkey(#[from] ValkeyError),
 
     #[error(transparent)]
     #[view_error(user)]
@@ -325,7 +325,7 @@ The trick proposed here is to set each error to a non-existent status code and h
 
 #### Migration
 
-The easier way to proceed here would be, to start by converting simple errors that occur deep in the stack (such as Postgres errors, Redis errors, Core errors, etc.). This way, we can rely on the Rust compiler to guide us through the process and ensure we don't forget any error. We'll need some kind of adapters to incorporate these errors into `EditoastError`s. We may find a generic way to do that, but that's more an implementation detail, especially since that would be temporary.
+The easier way to proceed here would be, to start by converting simple errors that occur deep in the stack (such as Postgres errors, Valkey errors, Core errors, etc.). This way, we can rely on the Rust compiler to guide us through the process and ensure we don't forget any error. We'll need some kind of adapters to incorporate these errors into `EditoastError`s. We may find a generic way to do that, but that's more an implementation detail, especially since that would be temporary.
 
 A good starting place would be `editoast_search`[^1] because its internal errors do not implement `EditoastError` already. Valkey errors may also be a decent candidate.
 
@@ -352,7 +352,7 @@ Rejected because it wouldn't be trivial to implement the multiple `From<T, U, ..
 Since we now have to really manage errors happening in every function **as precisely as possible**, there will likely be a lot of error enums going around. This may be a hassle and wrongfully encourage returning `Option` as an error. To circumvent that, an easy (albeit opinionated) QoL feature would be to use anonymous enums.
 
 ````rust
-fn get_resource(id: u64) -> Result<Resource, Enum3<DbError, RedisError, MissingResourceError>> {
+fn get_resource(id: u64) -> Result<Resource, Enum3<DbError, ValkeyError, MissingResourceError>> {
     todo!()
 }
 
@@ -377,7 +377,7 @@ async fn endpoint(Path(key): Path<Key>) -> Result<Json<Computation>, EndpointErr
 pub enum EndpointError {
     Db(#[from] DbError),
 
-    Redis(#[from] RedisError),
+    Valkey(#[from] ValkeyError),
 
     #[error(transparent)]
     #[view_error(user)]
