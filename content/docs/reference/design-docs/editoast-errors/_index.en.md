@@ -307,7 +307,7 @@ We'll need a progressive migration as this implies too much change to fit in a s
 4. Create a derive macro `ViewError` that interfaces with `thiserror::Error` API and generates:
   * `impl ViewError`
   * `impl utoipa::ToSchema` that returns the schema of the generated OSRD error
-5. ~~Adapt the frontend error keys collection script to also look for errors in the OpenAPI routes response section.~~ We accept a temporary desync of the error keys.
+5. We'll have to change the frontend error keys collection script almost entirely by the end of this migration. We could update it to also look for errors in the OpenAPI routes response section but that's extra work which brings little benefits. We accept a temporary desync of the error keys while this migration is ongoing.
 
 We decide the status code of each `ViewError` at it's definition as it's a required data to generate the response (the status code is part of the payload). Duplicating it in the `utoipa::path` annotation is a bad idea, and extracting it from the generate `utoipa::Route` is tricky. Therefore the error has to stay the source of truth about its status code.
 
