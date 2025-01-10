@@ -295,11 +295,11 @@ struct CoreError {
 
 Note: the `error` field is kept as a `serde_json::Value` and not parsed (even though its format is standard) as we're not supposed to perform any kind of analysis or recovery on it. If we end up parsing it in the future, that means we need a stronger mapping between Core errors and what editoast expects. The red flag will be more obvious if we end up manipulating a JSON dict instead of a proper structure.
 
-### Implementation plan
+## Implementation plan
 
 We'll need a progressive migration as this implies too much change to fit in a single PR. `EditoastError` and `ViewError` will have to cohabit for some time.
 
-#### Setup
+### Setup
 
 1. Create the `trait views::ViewError`
 2. Implement an `axum::IntoResponse` for `ViewError` to generate a standard OSRD error response payload
@@ -309,7 +309,7 @@ We'll need a progressive migration as this implies too much change to fit in a s
 6. We'll have to change the frontend error keys collection script almost entirely by the end of this migration. We could update it to also look for errors in the OpenAPI routes response section but that's extra work which brings little benefits. We accept a temporary desync of the error keys while this migration is ongoing.
 
 
-#### Migration
+### Migration
 
 The easier way to proceed here would be, to start by converting simple errors that occur deep in the stack (such as Postgres errors, Valkey errors, Core errors, etc.). This way, we can rely on the Rust compiler to guide us through the process and ensure we don't forget any error. We'll need some kind of adapters to incorporate these errors into `EditoastError`s. We may find a generic way to do that, but that's more an implementation detail, especially since that would be temporary.
 
@@ -320,7 +320,7 @@ One large change that will have to be atomic will be the adaptation of `Model`'s
 [^1]: Provided we start this migration before the rewrite of the search engine.
 [^3]: This work has already started at the time of writing.
 
-#### Wrapping up things
+### Wrapping up things
 
 Eventually, when all errors are converted and views errors are attached to their endpoint(s) in the OpenAPI, we'll have to:
 
@@ -328,9 +328,9 @@ Eventually, when all errors are converted and views errors are attached to their
 2. Adapt the frontend error keys collection script to look for errors in the OpenAPI routes response section instead of `components/schemas`
 3. (Out of scope) Discuss with the frontend the level of visibility about internal errors we want to give the user
 
-### Rejected ideas
+## Rejected ideas
 
-#### Anonymous enums
+### Anonymous enums
 
 {{% pageinfo color="warning" %}}
 Rejected because it wouldn't be trivial to implement the multiple `From<T, U, ..> for EnumX<T, U, ..>` without negative type parameters or the fallback type (unstable). That's necessary to make the `EnumX` usage transparent and avoid using `T1`, ..., `Tn` variants explicitly. The crate `anon_enum` deals with this issue by not providing the feature, so it won't help either.
@@ -379,7 +379,7 @@ pub enum EndpointError {
 The implementation of the `EnumX` type would be rather easy to generate for many tuple sizes. The crate [anon_enum](https://docs.rs/anon_enum/1.1.0/anon_enum/) exists but if we choose to use this pattern, it's probably better to have our own type for greater flexibility and avoid another dependency.
 
 
-#### Incident reports
+### Incident reports
 
 {{% pageinfo color="warning" %}}
 Rejected because it would be another mechanism to maintain with little benefits: errors are already persisted using opentelemetry, and for "internal server errors", it's up to the frontend to choose how much details is shown to the user.
