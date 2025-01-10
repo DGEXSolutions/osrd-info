@@ -295,6 +295,47 @@ struct CoreError {
 
 Note: the `error` field is kept as a `serde_json::Value` and not parsed (even though its format is standard) as we're not supposed to perform any kind of analysis or recovery on it. If we end up parsing it in the future, that means we need a stronger mapping between Core errors and what editoast expects. The red flag will be more obvious if we end up manipulating a JSON dict instead of a proper structure.
 
+### Why do we need a derive macro?
+
+The main issue with our error system is that the types we manipulate do not serialize to the error format we want. For example, an error defined like so:
+
+```rust
+#[derive(Debug, thiserror::Error)]
+#[error("{cause}")]
+struct MyError { cause: String, fix: String }
+```
+
+shouldn't be serialized as:
+
+```json
+{
+  "cause": "Emperor Zurg",
+  "fix": "Buzz Lightyear"
+}
+```
+
+like `serde::Serialize` would do, but as:
+
+```json
+{
+  "error_type": "editoast:MyError",
+  "status": 500,
+  "message": "Emperor Zurg",
+  "context": {
+    "cause": "Emperor Zurg",
+    "fix": "Buzz Lightyear",
+  }
+}
+```
+
+making `serde` basically useless for our errors. On top of that, since by design the derive macros of `utoipa` (`ToSchema`, `IntoResponse` especially) interpret the type structure like `serde` would do, we can't rely on them either. Therefore we need a custom derive-macro to convey the structural information of the type at runtime.
+
+Another solution would be to shift our error definition paradigm and orient ourselves to a system without code generation (probably using a combination of traits and builders). This would imply to rewrite all our errors and their handling, which is costly 🤑🫰. We'd also have to get rid of the convenience of `thiserror`, a huge loss in terms of ergonomics. And that would break the consistency with the other sub-crates of editoast.
+
+The macro doesn't even have to be overly complex. The `trait ViewError` could be responsible of translating the static type definition into an associated constant, which would be used to compute data produced at runtime. (Ie. `impl axum::IntoResponse for T: ViewError` and `impl utoipa::IntoResponses for T: ViewError`.) This would reduce the amount of generated code, at the expense of more complex data manaipulation at runtime.
+
+Going this deep into the implementation is not the goal of this document: the best way to do things will be decided when the migration work will start.
+
 ## Implementation plan
 
 We'll need a progressive migration as this implies too much change to fit in a single PR. `EditoastError` and `ViewError` will have to cohabit for some time.
